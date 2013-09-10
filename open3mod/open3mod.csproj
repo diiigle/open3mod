@@ -429,6 +429,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app_icon.ico" />
+    <EmbeddedResource Include="Images\close.png" />
     <EmbeddedResource Include="Images\TipOfTheDay\Tip5.png" />
     <EmbeddedResource Include="Images\TipOfTheDay\Tip3.png" />
     <EmbeddedResource Include="Images\TipOfTheDay\Tip4.png" />

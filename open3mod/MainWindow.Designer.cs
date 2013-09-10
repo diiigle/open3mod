@@ -562,11 +562,13 @@ namespace open3mod
             // tabControl1
             // 
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tabControl1.Location = new System.Drawing.Point(0, 49);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(1051, 663);
             this.tabControl1.TabIndex = 3;
+            this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.Selected += new System.Windows.Forms.TabControlEventHandler(this.OnTabSelected);
             this.tabControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnShowTabContextMenu);
             // 

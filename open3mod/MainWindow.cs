@@ -47,6 +47,8 @@ namespace open3mod
         private delegate void DelegatePopulateInspector(Tab tab);
         private readonly DelegatePopulateInspector _delegatePopulateInspector;
 
+        private readonly Image _closeIcon;
+        private readonly int _tabTitlePadding = 4;
 
         private readonly bool _initialized;
 
@@ -112,6 +114,8 @@ namespace open3mod
             // intercept all key events sent to children
             KeyPreview = true;
             _initialized = true;
+
+            _closeIcon = ImageFromResource.Get("open3mod.Images.close.png");
 
             InitRecentList();            
         }
@@ -525,6 +529,10 @@ namespace open3mod
                 {
                     t.Text = t.Text + FailedTitlePostfix;
                 }
+
+                //add some spaces to the title to increase the size of the tab (needed for rendering of the close button inside the title)
+                t.Text += "       ";
+
             });
 
             // must use BeginInvoke() here to make sure it gets executed
@@ -790,7 +798,19 @@ namespace open3mod
                         // hack: store the owning tab so the event handlers for
                         // the context menu know on whom they operate
                         _tabContextMenuOwner = tabControl1.TabPages[i];
-                        tabContextMenuStrip.Show(tabControl1, e.Location);                    
+                        tabContextMenuStrip.Show(tabControl1, e.Location);
+                    }
+                }
+            }
+            else if( e.Button == MouseButtons.Left)
+            {
+                Rectangle r = tabControl1.GetTabRect(tabControl1.SelectedIndex);
+                Rectangle closeButton = new Rectangle(r.Right - (_closeIcon.Width + _tabTitlePadding), _tabTitlePadding, _closeIcon.Width, _closeIcon.Height);
+                if (closeButton.Contains(e.Location))
+                {
+                    if (MessageBox.Show("Would you like to Close this Tab?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        CloseTab(tabControl1.TabPages[tabControl1.SelectedIndex]);
                     }
                 }
             }
@@ -1070,6 +1090,15 @@ namespace open3mod
                     }
                 }
             }
+        }
+
+        private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index == tabControl1.SelectedIndex)
+            {
+                e.Graphics.DrawImage(_closeIcon, e.Bounds.Right - (_closeIcon.Width + _tabTitlePadding), _tabTitlePadding, _closeIcon.Width, _closeIcon.Height);
+            }
+            e.Graphics.DrawString(this.tabControl1.TabPages[e.Index].Text, e.Font, Brushes.Black, e.Bounds.Left + _tabTitlePadding, e.Bounds.Top + _tabTitlePadding);
         }
     }
 }
