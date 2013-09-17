@@ -54,6 +54,8 @@ namespace open3mod
         private const float PanSpeed = 0.004f;
         private const float InitialCameraDistance = 3.0f;
 
+        private Vector3 _pivot;
+
 
         public OrbitCameraController(CameraMode camMode)
         {
@@ -68,6 +70,13 @@ namespace open3mod
             _front = Vector3.UnitZ;
 
             SetOrbitOrConstrainedMode(camMode, true);           
+        }
+
+
+        public void SetPivot(Vector3 pivot)
+        {
+            _pivot = pivot;
+            UpdateViewMatrix();
         }
 
 
@@ -138,7 +147,7 @@ namespace open3mod
         private void UpdateViewMatrix()
         {
             Matrix4 _viewWithPitchAndRoll = _view * Matrix4.CreateFromAxisAngle(_right, _pitchAngle) * Matrix4.CreateFromAxisAngle(_front, _rollAngle);
-            _viewWithOffset = Matrix4.LookAt(_viewWithPitchAndRoll.Column2.Xyz * _cameraDistance, Vector3.Zero, _viewWithPitchAndRoll.Column1.Xyz);
+            _viewWithOffset = Matrix4.LookAt(_viewWithPitchAndRoll.Column2.Xyz * _cameraDistance + _pivot, _pivot, _viewWithPitchAndRoll.Column1.Xyz);
             _viewWithOffset *= Matrix4.CreateTranslation(_panVector);
 
             _dirty = false;
