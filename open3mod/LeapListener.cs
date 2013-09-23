@@ -328,6 +328,11 @@ namespace open3mod
         {
             if (CoreSettings.CoreSettings.Default.Leap_SmoothingWindowSize == 0)
             {
+                if (_valueHistory[(int)id] != null)
+                {
+                    _valueHistory[(int)id].Clear();
+                    _valueHistory[(int)id].Add(newvalue);
+                }
                 return newvalue;
             }
             List<float> list;
