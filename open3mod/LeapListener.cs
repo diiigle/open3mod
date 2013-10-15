@@ -17,7 +17,7 @@ namespace open3mod
         /// <summary>
         /// Identification of the parameters that should be smoothed out
         /// </summary>
-        private enum SmoothedValues
+        public enum DataTypes
         {
             X = 0,
             Y = 1,
@@ -54,9 +54,9 @@ namespace open3mod
 
         /// <summary>
         /// List holding the data to smooth the values,
-        /// one list for each parameter in SmoothedValues (ENUM)
+        /// one list for each parameter in DataTypes (ENUM)
         /// </summary>
-        private List<float>[] _valueHistory = new List<float>[(int) SmoothedValues._Max];
+        private List<float>[] _valueHistory = new List<float>[(int) DataTypes._Max];
 
         /// <summary>
         /// reference to the MainWindow
@@ -80,9 +80,45 @@ namespace open3mod
         /// </summary>
         private float _lockTimeout;
 
+        /// <summary>
+        /// Interface to the 
+        /// index of the current active LeapState
+        /// </summary>
+        public LeapStates CurrentState
+        {
+            get
+            {
+                if (_currentState == null)
+                {
+                    _currentState = _states[0];
+                }
+                return _currentState.StateIndex;
+            }
+            set
+            {
+                //change the current state
+                if (_currentState == null || _currentState.StateIndex != value)
+                {
+                    _currentState = _states[(int)value];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Current active LeapState of the Controller
+        /// </summary>
+        private LeapState _currentState;
+
+        /// <summary>
+        /// data holding list for the different LeapStates
+        /// The order must match LeapStates (ENUM)
+        /// </summary>
+        private LeapState[] _states = new LeapState[] { new FpsLeapState() };
+
         public LeapListener(MainWindow mainwindow)
         {
             _mainWindow = mainwindow;
+            CurrentState = LeapStates.FpsLeapState;
         }
 
         private void SafeWriteLine(String line)
@@ -168,16 +204,16 @@ namespace open3mod
                 x = y = z = pitch = yaw = roll = 0.0f;
 
                 //if (hand.Fingers.Count == 5)
-                GetSmoothedValue(SmoothedValues.X, translation.x);
-                GetSmoothedValue(SmoothedValues.Y, translation.y);
-                GetSmoothedValue(SmoothedValues.Z, translation.z);
+                GetSmoothedValue(DataTypes.X, translation.x);
+                GetSmoothedValue(DataTypes.Y, translation.y);
+                GetSmoothedValue(DataTypes.Z, translation.z);
                 if (hand.TranslationProbability(oldFrame) >= 0.8)
                 {
                     if (CoreSettings.CoreSettings.Default.Leap_TranslationSmoothing)
                     {
-                        x = GetSmoothedValue(SmoothedValues.X);
-                        y = GetSmoothedValue(SmoothedValues.Y);
-                        z = GetSmoothedValue(SmoothedValues.Z);
+                        x = GetSmoothedValue(DataTypes.X);
+                        y = GetSmoothedValue(DataTypes.Y);
+                        z = GetSmoothedValue(DataTypes.Z);
                     }
                     else
                     {
@@ -187,14 +223,14 @@ namespace open3mod
                     }
                 }
 
-                GetSmoothedValue(SmoothedValues.Pitch, direction.Pitch);
-                GetSmoothedValue(SmoothedValues.Roll, normal.Roll);
-                GetSmoothedValue(SmoothedValues.Yaw, direction.Yaw);
+                GetSmoothedValue(DataTypes.Pitch, direction.Pitch);
+                GetSmoothedValue(DataTypes.Roll, normal.Roll);
+                GetSmoothedValue(DataTypes.Yaw, direction.Yaw);
                 if (CoreSettings.CoreSettings.Default.Leap_RotationSmoothing)
                 {
-                    pitch = GetSmoothedValue(SmoothedValues.Pitch);
-                    roll = GetSmoothedValue(SmoothedValues.Roll);
-                    yaw = GetSmoothedValue(SmoothedValues.Yaw);
+                    pitch = GetSmoothedValue(DataTypes.Pitch);
+                    roll = GetSmoothedValue(DataTypes.Roll);
+                    yaw = GetSmoothedValue(DataTypes.Yaw);
                 }
                 else
                 {
@@ -319,12 +355,12 @@ namespace open3mod
 
         /// <summary>
         /// Smoothes data over multiple frames ( see Leap_SmoothingWindowSize )
-        /// The data is identified with the SmoothedValues indices
+        /// The data is identified with the DataTypes indices
         /// </summary>
         /// <param name="id">Identifier for the data</param>
         /// <param name="newvalue">some new data that should be added to the calculation</param>
         /// <returns>the average value</returns>
-        private float GetSmoothedValue(SmoothedValues id, float newvalue)
+        private float GetSmoothedValue(DataTypes id, float newvalue)
         {
             if (CoreSettings.CoreSettings.Default.Leap_SmoothingWindowSize == 0)
             {
@@ -360,7 +396,7 @@ namespace open3mod
         /// </summary>
         /// <param name="id">Identifier for the data</param>
         /// <returns>the average value</returns>
-        private float GetSmoothedValue(SmoothedValues id)
+        private float GetSmoothedValue(DataTypes id)
         {
             float average = 0.0f;
             if (_valueHistory[(int)id] != null)
