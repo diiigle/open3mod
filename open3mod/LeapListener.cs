@@ -113,12 +113,16 @@ namespace open3mod
         /// data holding list for the different LeapStates
         /// The order must match LeapStates (ENUM)
         /// </summary>
-        private LeapState[] _states = new LeapState[] { new FpsLeapState() };
+        private LeapState[] _states = new LeapState[] { new OrbitLeapState(), new FpsLeapState() };
+
+        /// <summary>
+        /// cache for the active camera mode
+        /// </summary>
+        private CameraMode _camMode;
 
         public LeapListener(MainWindow mainwindow)
         {
             _mainWindow = mainwindow;
-            CurrentState = LeapStates.FpsLeapState;
         }
 
         private void SafeWriteLine(String line)
@@ -156,6 +160,8 @@ namespace open3mod
 
         public override void OnFrame(Controller controller)
         {
+            MaintainState();
+
             // Get the most recent frame and report some basic information
             Frame frame = controller.Frame();
 
@@ -425,12 +431,39 @@ namespace open3mod
         }
 
         /// <summary>
-        /// Reset to default mode
+        /// Reset to default tracking mode
         /// </summary>
         private void ResetTrackingMode()
         {
             _trackingHands.Clear();
             _trackingMode = TrackingMode.Idle;
         }
+
+        /// <summary>
+        /// keep the CurrentState in sync with the active camera
+        /// </summary>
+        private void MaintainState()
+        {
+            var cam = _mainWindow.UiState.ActiveTab.ActiveCameraController;
+            if (cam != null & _camMode != cam.GetCameraMode())
+            {
+                var mode = cam.GetCameraMode();
+                _camMode = mode;
+                switch (mode)
+                {
+                    case CameraMode.Fps:
+                        CurrentState = LeapStates.FpsLeapState;
+                        break;
+
+                    case CameraMode.Orbit:
+                        CurrentState = LeapStates.OrbitLeapState;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
     }
 }

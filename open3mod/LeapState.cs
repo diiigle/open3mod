@@ -22,7 +22,8 @@ namespace open3mod
     /// </summary>
     public enum LeapStates
     {
-        FpsLeapState = 0,
+        OrbitLeapState = 0,
+        FpsLeapState = 1,        
     }
 
     /// <summary>

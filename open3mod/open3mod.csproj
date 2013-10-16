@@ -108,6 +108,7 @@
       <DependentUpon>FolderSetDisplay.cs</DependentUpon>
     </Compile>
     <Compile Include="FpsLeapState.cs" />
+    <Compile Include="OrbitLeapState.cs" />
     <Compile Include="LeapState.cs" />
     <Compile Include="LeapListener.cs" />
     <Compile Include="LogPipe.cs" />
