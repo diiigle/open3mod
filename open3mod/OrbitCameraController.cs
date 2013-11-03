@@ -35,6 +35,8 @@ namespace open3mod
         private float _cameraDistance;
         private float _pitchAngle = 0.8f;
         private float _rollAngle = 0.0f;
+        private float _yawAngle = 0.0f;
+
         private readonly Vector3 _right;
         private readonly Vector3 _up;
         private readonly Vector3 _front;
@@ -144,11 +146,22 @@ namespace open3mod
             return _mode;
         }
 
+        private Matrix4 _lastL = Matrix4.Identity;
 
         private void UpdateViewMatrix()
         {
-            var viewWithPitchAndRoll = _view * Matrix4.CreateFromAxisAngle(_right, _pitchAngle) * Matrix4.CreateFromAxisAngle(_front, _rollAngle);
-            _viewWithOffset = Matrix4.LookAt(viewWithPitchAndRoll.Column2.Xyz * _cameraDistance + _pivot, _pivot, viewWithPitchAndRoll.Column1.Xyz);
+            // TODO: roll pitch yaw matrices can be directly constructed, createfromaxisangle is slow
+            var LR = Matrix4.CreateFromAxisAngle(_front, _rollAngle);
+            var LP = Matrix4.CreateFromAxisAngle(_right, _pitchAngle);
+            var LY = Matrix4.CreateFromAxisAngle(_up, _yawAngle);
+            var L = LP * LY * LR;
+
+            _lastL.Transpose();
+            _view = L * _lastL * _view;
+
+            _lastL = L;
+         
+            _viewWithOffset = Matrix4.LookAt(_view.Column2.Xyz * _cameraDistance + _pivot, _pivot, _view.Column1.Xyz);
             _viewWithOffset *= Matrix4.CreateTranslation(_panVector);
 
             _dirty = false;
