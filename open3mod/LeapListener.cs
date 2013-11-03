@@ -200,19 +200,37 @@ namespace open3mod
                 }
 
                 Frame oldFrame = controller.Frame(5);
-                Vector translation = hand.Translation(oldFrame);
-
-                // Get the hand's normal vector and direction
-                Vector normal = hand.PalmNormal;
-                Vector direction = hand.Direction;
-
                 float x, y, z, pitch, yaw, roll;
                 x = y = z = pitch = yaw = roll = 0.0f;
 
+                //***************
+                //  Translation
+                //***************
+                switch (_currentState.Translation)
+                {
+                    case CoordinateValues.Absolute:
+
+                        Vector translation = hand.PalmPosition;
+
+                        x = translation.x;
+                        y = translation.y;
+                        z = translation.z;
+                        break;
+
+                    case CoordinateValues.Delta:
+
+                        Vector translationDelta = hand.Translation(oldFrame);
+
+                        x = translationDelta.x;
+                        y = translationDelta.y;
+                        z = translationDelta.z;
+                        break;
+                }
+
                 //if (hand.Fingers.Count == 5)
-                GetSmoothedValue(DataTypes.X, translation.x);
-                GetSmoothedValue(DataTypes.Y, translation.y);
-                GetSmoothedValue(DataTypes.Z, translation.z);
+                GetSmoothedValue(DataTypes.X, x);
+                GetSmoothedValue(DataTypes.Y, y);
+                GetSmoothedValue(DataTypes.Z, z);
                 if (hand.TranslationProbability(oldFrame) >= 0.8)
                 {
                     if (CoreSettings.CoreSettings.Default.Leap_TranslationSmoothing)
@@ -221,33 +239,49 @@ namespace open3mod
                         y = GetSmoothedValue(DataTypes.Y);
                         z = GetSmoothedValue(DataTypes.Z);
                     }
-                    else
-                    {
-                        x = translation.x;
-                        y = translation.y;
-                        z = translation.z;
-                    }
                 }
 
-                GetSmoothedValue(DataTypes.Pitch, direction.Pitch);
-                GetSmoothedValue(DataTypes.Roll, normal.Roll);
-                GetSmoothedValue(DataTypes.Yaw, direction.Yaw);
+                //************
+                //  Rotation
+                //************
+                switch (_currentState.Rotation)
+                {
+                    case CoordinateValues.Absolute:
+
+                        // Get the hand's normal vector and direction
+                        Vector normal = hand.PalmNormal;
+                        Vector direction = hand.Direction;
+
+                        pitch = direction.Pitch;
+                        roll = normal.Roll;
+                        yaw = direction.Yaw;
+                        break;
+
+                    case CoordinateValues.Delta:
+
+                        pitch = hand.RotationAngle(oldFrame, Vector.XAxis);
+                        yaw = hand.RotationAngle(oldFrame, Vector.YAxis);
+                        roll = hand.RotationAngle(oldFrame, Vector.ZAxis);
+                        break;
+                }
+
+                GetSmoothedValue(DataTypes.Pitch, pitch);
+                GetSmoothedValue(DataTypes.Roll, roll);
+                GetSmoothedValue(DataTypes.Yaw, yaw);
                 if (CoreSettings.CoreSettings.Default.Leap_RotationSmoothing)
                 {
                     pitch = GetSmoothedValue(DataTypes.Pitch);
                     roll = GetSmoothedValue(DataTypes.Roll);
                     yaw = GetSmoothedValue(DataTypes.Yaw);
                 }
-                else
-                {
-                    pitch = direction.Pitch;
-                    roll = normal.Roll;
-                    yaw = direction.Yaw;
-                }
 
                 if (_trackingMode == TrackingMode.Tracking)
                 {
-                    _mainWindow.UiState.ActiveTab.ActiveCameraController.LeapInput(x, y, z, pitch, roll, yaw);
+                    var cam = _mainWindow.UiState.ActiveTab.ActiveCameraController;
+                    if (cam != null)
+                    {
+                        cam.LeapInput(x, y, z, pitch, roll, yaw);
+                    }
                     _lastHandSeen = frame.Timestamp;
                 }
                 //test of fist recognition
@@ -462,6 +496,11 @@ namespace open3mod
                     default:
                         break;
                 }
+            }
+            //reset all smoothed values
+            foreach (DataTypes datatype in Enum.GetValues(typeof(DataTypes)))
+            {
+                _valueHistory[(int)datatype].Clear();
             }
         }
 
