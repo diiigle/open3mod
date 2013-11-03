@@ -143,7 +143,7 @@ namespace open3mod
             return _orientation;
         }
 
-        public void LeapInput(float x, float y, float z, float pitch, float roll, float yaw)
+        public void LeapInput(float x, float y, float z, float pitch, float roll, float yaw, int fingerCount)
         {
             Scroll(-z);
             //TODO parameters in Settings

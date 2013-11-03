@@ -219,26 +219,26 @@ namespace open3mod
 
                     case CoordinateValues.Delta:
 
-                        Vector translationDelta = hand.Translation(oldFrame);
+                        if (hand.TranslationProbability(oldFrame) >= 0.8)
+                        {
+                            Vector translationDelta = hand.Translation(oldFrame);
 
-                        x = translationDelta.x;
-                        y = translationDelta.y;
-                        z = translationDelta.z;
+                            x = translationDelta.x;
+                            y = translationDelta.y;
+                            z = translationDelta.z;
+                        }
                         break;
                 }
 
-                //if (hand.Fingers.Count == 5)
                 GetSmoothedValue(DataTypes.X, x);
                 GetSmoothedValue(DataTypes.Y, y);
                 GetSmoothedValue(DataTypes.Z, z);
-                if (hand.TranslationProbability(oldFrame) >= 0.8)
+
+                if (CoreSettings.CoreSettings.Default.Leap_TranslationSmoothing)
                 {
-                    if (CoreSettings.CoreSettings.Default.Leap_TranslationSmoothing)
-                    {
-                        x = GetSmoothedValue(DataTypes.X);
-                        y = GetSmoothedValue(DataTypes.Y);
-                        z = GetSmoothedValue(DataTypes.Z);
-                    }
+                    x = GetSmoothedValue(DataTypes.X);
+                    y = GetSmoothedValue(DataTypes.Y);
+                    z = GetSmoothedValue(DataTypes.Z);
                 }
 
                 //************
@@ -280,7 +280,7 @@ namespace open3mod
                     var cam = _mainWindow.UiState.ActiveTab.ActiveCameraController;
                     if (cam != null)
                     {
-                        cam.LeapInput(x, y, z, pitch, roll, yaw);
+                        cam.LeapInput(x, y, z, pitch, roll, yaw, hand.Fingers.Count);
                     }
                     _lastHandSeen = frame.Timestamp;
                 }
@@ -496,11 +496,15 @@ namespace open3mod
                     default:
                         break;
                 }
-            }
-            //reset all smoothed values
-            foreach (DataTypes datatype in Enum.GetValues(typeof(DataTypes)))
-            {
-                _valueHistory[(int)datatype].Clear();
+
+                //reset all smoothed values
+                foreach (DataTypes datatype in Enum.GetValues(typeof(DataTypes)))
+                {
+                    if (datatype != DataTypes._Max && _valueHistory[(int)datatype] != null)
+                    {
+                        _valueHistory[(int)datatype].Clear();
+                    }
+                }
             }
         }
 

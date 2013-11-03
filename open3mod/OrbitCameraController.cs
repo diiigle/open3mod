@@ -154,10 +154,10 @@ namespace open3mod
             var LR = Matrix4.CreateFromAxisAngle(_front, _rollAngle);
             var LP = Matrix4.CreateFromAxisAngle(_right, _pitchAngle);
             var LY = Matrix4.CreateFromAxisAngle(_up, _yawAngle);
-            var L = LP * LY * LR;
+            var L = LY * LY * LP;
 
             _lastL.Transpose();
-            _view = L * _lastL * _view;
+            _view = _view * _lastL * L;
 
             _lastL = L;
          
@@ -220,23 +220,31 @@ namespace open3mod
             {
                 _pitchAngle = 0.0f;
                 _rollAngle = 0.0f;
+                _yawAngle = 0.0f;
+                _lastL = _view;
             }
 
             _dirty = true;
         }
 
-        public void LeapInput(float x, float y, float z, float pitch, float roll, float yaw)
+        public void LeapInput(float x, float y, float z, float pitch, float roll, float yaw, int fingerCount)
         {
-            // TODO Parameters in Settings dialog 
-            _pitchAngle = pitch * 3.0f;
-            _rollAngle = roll * 1.0f;
-            Matrix4 yawrotation = Matrix4.CreateFromAxisAngle(_up, (float)(x * 0.125 * Math.PI / 180.0));
-            _view *= yawrotation;
+            //// Method 1, all rotation
+            //_pitchAngle = pitch;
+            //_rollAngle = roll;
+            //_yawAngle = yaw;
 
-            //Zoom with hands movement in a forward direction ( Z axis )
-            Scroll(z * 3.0f);
+            // Method 2, all translation
+            if (fingerCount == 5)
+            {
+                _pitchAngle -= y * 0.001f;
+                _rollAngle = 0.0f;
+                _yawAngle += x * 0.001f;
 
-            _dirty = true;
+                //Zoom with hands movement in a forward direction ( Z axis )
+                Scroll(z * 0.5f);
+                _dirty = true;
+            }
 
             // leave the X,Z,Y constrained camera modes if we were in any of them
             SetOrbitOrConstrainedMode(CameraMode.Orbit);

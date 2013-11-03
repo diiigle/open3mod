@@ -11,7 +11,7 @@ namespace open3mod
         public OrbitLeapState()
         {
             base.StateIndex = LeapStates.OrbitLeapState;
-            base.Translation = CoordinateValues.Absolute;
+            base.Translation = CoordinateValues.Delta;
             base.Rotation = CoordinateValues.Absolute;
             base._angleorder = new LeapListener.DataTypes[3] 
             { 
